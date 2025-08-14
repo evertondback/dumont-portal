@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DBACK — Timesheet (Preview)</title>
+<style>
+  :root{--blue:#1861ff;--soft:#f5f8ff;--line:#e5e7eb;--ink:#111;--muted:#6b7280;font:14px/1.45 -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial;}
+  *{box-sizing:border-box} body{margin:0;background:#fff;color:var(--ink)}
+  .container{max-width:900px;margin:0 auto;padding:20px 16px 40px}
+  header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:12px 0;margin:0 0 16px 0;z-index:10}
+  h1{margin:0;font-size:20px}
+  .subtitle{color:var(--muted);font-size:12px;margin-top:4px}
+  .section{border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0}
+  .section h2{font-size:14px;margin:0 0 8px 0}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(12,1fr)}
+  .col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-8{grid-column:span 8}.col-12{grid-column:1/-1}
+  label{display:block;font-weight:600;margin:6px 0 4px}
+  input,select,textarea,button{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  select.hashtag,.hashtag{color:#1861ff;font-weight:700}
+  .hl{background:#f5f8ff;border-color:#d6e4ff}
+  .muted{color:#6b7280}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:8px}
+  th{background:#fafafa}
+  th.day{width:150px} th.status{width:140px} th.hours{width:110px}
+  .totals{font-weight:700;margin-top:8px}
+  .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+  .btn{cursor:pointer}.btn-primary{background:#1861ff;color:#fff;border:0}
+  .note{font-size:12px}.ok{color:#065f46}.warn{color:#7c2d12}
+</style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <h1>DBACK Timesheet</h1>
+    <div class="subtitle">Browser-only • Server email (PDF attached) • Offline queue & auto-send later</div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="section">
+    <h2>Summary</h2>
+    <div class="grid">
+      <div class="col-4">
+        <label>Property</label>
+        <select id="property" class="hashtag hl">
+          <option>#11PineSt</option>
+          <option>#61PocomoRd</option>
+          <option>#3MaxeyPondRd</option>
+          <option>#51WestMiacometRd</option>
+        </select>
+      </div>
+      <div class="col-4">
+        <label>Project</label>
+        <select id="project" class="hashtag hl">
+          <option>#Construction</option>
+          <option>#Renovation</option>
+          <option>#Caretaking</option>
+        </select>
+      </div>
+      <div class="col-4">
+        <label>Phase (optional)</label>
+        <input id="phase" placeholder="e.g., Phase 1 – Rough">
+      </div>
+      <div class="col-4">
+        <label>Subcontractor</label>
+        <input id="submitter" class="hl" placeholder="Name">
+      </div>
+      <div class="col-4">
+        <label>Your Email (for confirmation)</label>
+        <input id="ccEmail" type="email" placeholder="you@example.com">
+      </div>
+      <div class="col-4">
+        <label>Week — From</label>
+        <input id="weekFrom" type="date" class="hl">
+      </div>
+      <div class="col-4">
+        <label>Week — To</label>
+        <input id="weekTo" type="date" class="hl" readonly>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Hours by Day</h2>
+    <table id="sheet">
+      <thead>
+        <tr>
+          <th class="day">Day</th>
+          <th>Task</th>
+          <th class="status">Task Status</th>
+          <th>Note</th>
+          <th class="hours">Hours</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="totals">Total Hours: <span id="totalHours">0.00</span></div>
+    <div class="note">Attach photos by replying to the confirmation email (PDF is attached automatically).</div>
+  </div>
+
+  <div class="section">
+    <div class="actions">
+      <button id="save" class="btn">Save Draft (offline)</button>
+      <button id="send" class="btn btn-primary">Send to Office</button>
+    </div>
+    <div id="status" class="note"></div>
+  </div>
+</main>
+
+<script>
+  // --- Helpers
+  const S=(q,e=document)=>e.querySelector(q), SS=(q,e=document)=>Array.from(e.querySelectorAll(q));
+  const fmtDate=d=>d.toISOString().slice(0,10);
+  const STATUS=["#NotStarted","#InProgress","#Scheduled","#Open","#Complete"];
+
+  function buildWeek(start){
+    const tb=S("#sheet tbody"); tb.innerHTML="";
+    for(let i=0;i<7;i++){
+      const day=new Date(start); day.setDate(start.getDate()+i);
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td><strong>${day.toLocaleDateString(undefined,{weekday:'long'})}</strong>
+            <div class="note">${fmtDate(day)}</div></td>
+        <td><input placeholder="Describe work"></td>
+        <td><select>${STATUS.map(s=>`<option>${s}</option>`).join("")}</select></td>
+        <td><textarea rows="2" placeholder="Notes"></textarea></td>
+        <td><input class="hours" type="number" min="0" step="0.25" inputmode="decimal" placeholder="0"></td>`;
+      tb.appendChild(tr);
+    }
+    SS(".hours").forEach(i=>i.addEventListener("input", updateTotals));
+    updateTotals();
+  }
+  function updateTotals(){
+    const total=SS(".hours").reduce((s,i)=>s+(parseFloat(i.value)||0),0);
+    S("#totalHours").textContent=(Math.round(total*100)/100).toFixed(2);
+  }
+  function bounds(ref=new Date()){
+    const d=new Date(ref), day=d.getDay();
+    const sun=new Date(d); sun.setDate(d.getDate()-day);
+    const sat=new Date(sun); sat.setDate(sun.getDate()+6);
+    return {sun,sat};
+  }
+  function collect(){
+    const rows=SS("#sheet tbody tr").map(tr=>({
+      day: tr.querySelector("strong").textContent,
+      date: tr.querySelector(".note").textContent,
+      task: tr.querySelector("input").value.trim(),
+      status: tr.querySelector("select").value,
+      note: tr.querySelector("textarea").value.trim(),
+      hours: parseFloat(tr.querySelector(".hours").value)||0
+    }));
+    return {
+      property:S("#property").value, project:S("#project").value, phase:S("#phase").value.trim(),
+      submitter:S("#submitter").value.trim(), ccEmail:S("#ccEmail").value.trim(),
+      weekFrom:S("#weekFrom").value, weekTo:S("#weekTo").value,
+      totalHours: parseFloat(S("#totalHours").textContent)||0,
+      days:rows, createdAt:new Date().toISOString(), ua:navigator.userAgent
+    };
+  }
+  function setStatus(msg,cls){ const el=S("#status"); el.textContent=msg; el.className="note "+(cls||""); }
+
+  // --- Preview actions
+  function saveDraft(){
+    try{ localStorage.setItem("dback_timesheet_preview", JSON.stringify(collect())); }catch(e){}
+    setStatus("Saved locally (preview).", "ok");
+  }
+  async function sendPreview(){
+    const payload=collect();
+    setStatus("Sending (preview)…");
+    try{
+      // In preview, fetch will fail unless you have /api/send on the same origin.
+      const r=await fetch("/api/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      if(!r.ok) throw new Error("server");
+      setStatus("Sent. (On production, the office gets email + PDF, submitter gets confirmation.)","ok");
+    }catch(e){
+      setStatus("Preview mode: no backend found. Deploy to Firebase for real sending.", "warn");
+      console.log("Preview send error (expected without backend):", e);
+    }
+  }
+
+  // --- Init
+  (function init(){
+    const {sun,sat}=bounds(new Date());
+    S("#weekFrom").value=fmtDate(sun); S("#weekTo").value=fmtDate(sat); buildWeek(sun);
+    S("#weekFrom").addEventListener("change", e=>{
+      const d=new Date(e.target.value); const b=bounds(d);
+      S("#weekFrom").value=fmtDate(b.sun); S("#weekTo").value=fmtDate(b.sat); buildWeek(b.sun);
+    });
+    S("#save").addEventListener("click", saveDraft);
+    S("#send").addEventListener("click", sendPreview);
+
+    // Restore preview draft
+    try{
+      const raw=localStorage.getItem("dback_timesheet_preview");
+      if(raw){
+        const d=JSON.parse(raw);
+        S("#property").value=d.property||S("#property").value;
+        S("#project").value=d.project||S("#project").value;
+        S("#phase").value=d.phase||"";
+        S("#submitter").value=d.submitter||"";
+        S("#ccEmail").value=d.ccEmail||"";
+        S("#weekFrom").value=d.weekFrom||S("#weekFrom").value;
+        S("#weekTo").value=d.weekTo||S("#weekTo").value;
+        const rows=SS("#sheet tbody tr");
+        (d.days||[]).forEach((x,i)=>{ const r=rows[i]; if(!r) return;
+          r.querySelector("input").value=x.task||"";
+          r.querySelector("select").value=x.status||"#NotStarted";
+          r.querySelector("textarea").value=x.note||"";
+          r.querySelector(".hours").value=x.hours ?? "";
+        });
+        updateTotals();
+      }
+    }catch(e){}
+  })();
+</script>
+</body>
+</html>
