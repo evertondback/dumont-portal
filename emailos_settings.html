@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EmailOS — Application Settings & Configurations</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f7f8fb;
+      color: #1c1f26;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 20px 60px;
+      background: #f7f8fb;
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto 28px;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      color: #4c5566;
+    }
+
+    .section-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 10px 30px rgba(20, 26, 40, 0.08);
+    }
+
+    section h2 {
+      margin-top: 0;
+      font-size: 20px;
+      border-bottom: 1px solid #e6e9ef;
+      padding-bottom: 8px;
+    }
+
+    section h3 {
+      margin: 18px 0 8px;
+      font-size: 16px;
+      color: #323a4a;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    li {
+      padding: 8px 12px;
+      background: #f3f5f9;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #e4ebff;
+      color: #2d4ec9;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      font-size: 13px;
+      color: #596275;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EmailOS — Application Settings & Configurations</h1>
+    <p>All configuration options are managed through the app UI or backing Google Sheets. No Zapier dependencies.</p>
+  </header>
+
+  <main class="section-grid">
+    <section>
+      <h2>Global System Settings</h2>
+      <ul>
+        <li>system_name</li>
+        <li>environment: Production | Staging | Sandbox</li>
+        <li>default_timezone</li>
+        <li>default_language</li>
+        <li>audit_logging_enabled: true | false</li>
+        <li>strict_json_validation: true | false</li>
+        <li>schema_version</li>
+        <li>fail_safe_mode: true | false</li>
+        <li>privacy_mode: Standard | High (redacts PII in UI previews)</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>config_health_status: Healthy | Degraded | Misconfigured</li>
+        <li>config_validation_errors[] written to Sheets for audit</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>System of Record Settings (Google Sheets)</h2>
+      <ul>
+        <li>master_sheet_url</li>
+        <li>inbox_db_sheet_url</li>
+        <li>command_queue_sheet_url</li>
+        <li>attachments_registry_sheet_url</li>
+        <li>sheets_override_gmail_state: true</li>
+        <li>sheet_sync_interval_minutes</li>
+        <li>sheet_write_mode: Append | Update | Locked</li>
+        <li>sheet_conflict_resolution: SheetsWins | Block | FlagForReview</li>
+        <li>sheet_row_locking_enabled: true | false</li>
+        <li>sheet_change_audit_sheet_url (optional)</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>per-row idempotency_key to prevent duplicate actions</li>
+        <li>command_queue_status enum: Queued | Drafted | Executed | Failed | Blocked | NeedsReview</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Gmail Integration Settings</h2>
+      <ul>
+        <li>gmail_account_id</li>
+        <li>gmail_account_email</li>
+        <li>gmail_oauth_connection_id (or equivalent internal connector id)</li>
+        <li>allowed_actions: REPLY, REPLY_ALL, FORWARD, CREATE_DRAFT, SEND_EMAIL, SEND_LATER, ARCHIVE, UNARCHIVE, MARK_READ, MARK_UNREAD, STAR, UNSTAR, ADD_LABEL, REMOVE_LABEL, MOVE_TO_LABEL, UPDATE_THREAD_STATUS, DOWNLOAD_ATTACHMENTS, SAVE_ATTACHMENTS_TO_DRIVE, LINK_ATTACHMENTS_TO_SHEET</li>
+        <li>restricted_actions: DELETE</li>
+        <li>default_reply_mode: CREATE_DRAFT</li>
+        <li>auto_send_enabled: false</li>
+        <li>thread_scope_default: message | thread</li>
+        <li>max_recipients_before_review: 3</li>
+        <li>external_recipient_requires_review: true | false</li>
+        <li>signature_policy: UseGmailDefault | UseTemplate | None</li>
+        <li>reply_header_policy: IncludeQuotedText | TrimQuotedText | NoQuote</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>dry_run_mode: true | false (writes recommendations only, blocks execution)</li>
+        <li>allowlist_domains[] and blocklist_domains[] enforcement before send</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Execution & Control Settings (Sheets-Driven)</h2>
+      <ul>
+        <li>execution_enabled: true | false</li>
+        <li>execution_mode: RecommendOnly | Controlled | Auto</li>
+        <li>reversible_actions_only: true | false</li>
+        <li>execution_retry_limit</li>
+        <li>execution_error_policy: Halt | Retry | Escalate</li>
+        <li>execution_audit_log_sheet_url</li>
+        <li>command_processor_poll_interval_seconds</li>
+        <li>command_processor_max_batch_size</li>
+        <li>command_processor_lock_timeout_seconds</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>Two-person rule for SEND_EMAIL when risk != Low <span class="pill">require_approvals_for_send</span></li>
+        <li>approval_roles_allowed[] (e.g., Owner, Manager)</li>
+        <li>circuit_breaker_enabled: true | false (halts execution if failure-rate threshold exceeded)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Automation Policy Engine</h2>
+      <ul>
+        <li>automation_enabled: true | false</li>
+        <li>auto_execution_threshold_confidence: 90</li>
+        <li>auto_execution_requires_low_risk: true</li>
+        <li>auto_execution_requires_no_ambiguity: true</li>
+        <li>auto_execution_requires_explicit_intent: true</li>
+        <li>auto_execution_allowed_categories: Sales, Support, Ops, Internal</li>
+        <li>auto_execution_blocked_categories: Legal, Finance, HR, Recruiting</li>
+        <li>auto_execution_allowed_actions: CREATE_DRAFT, ADD_LABEL, MOVE_TO_LABEL, MARK_READ, ARCHIVE</li>
+        <li>auto_execution_blocked_actions: SEND_EMAIL, DELETE</li>
+        <li>escalation_on_block_label</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>policy_overrides_by_sender (e.g., VIPs always require review)</li>
+        <li>policy_overrides_by_keyword (e.g., “invoice”, “contract”, “termination” → force review)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Email Classification Settings</h2>
+      <ul>
+        <li>enabled_categories: Sales, Support, Ops, Finance, Legal, Recruiting, Internal, FYI, Spam</li>
+        <li>default_category: FYI</li>
+        <li>enabled_subcategories_by_category (mapping table in Sheets)</li>
+        <li>sentiment_detection_enabled: true | false</li>
+        <li>risk_detection_enabled: true | false</li>
+        <li>ambiguity_detection_enabled: true | false</li>
+        <li>language_detection_enabled: true | false</li>
+        <li>spam_rules_enabled: true | false</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>explainability_short[] (auditable bullet reasons, no chain-of-thought)</li>
+        <li>model_version_pinned for reproducible outputs</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Priority, Urgency & SLA Configuration</h2>
+      <ul>
+        <li>priority_levels: P0, P1, P2, P3</li>
+        <li>urgency_score_range: 0–100</li>
+        <li>priority_thresholds: P0_min_score, P1_min_score, P2_min_score, P3_min_score</li>
+        <li>sla_mapping_enabled: true | false</li>
+        <li>sla_profiles: name, target_response_minutes, applies_to_categories[]</li>
+        <li>sla_breach_policy: LabelAndEscalate | NotifyOwner | HaltAuto</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>Per-client SLA overrides table keyed by sender domain or company</li>
+        <li>After-hours SLA policy (pause clock outside business hours)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Draft Generation Settings</h2>
+      <ul>
+        <li>draft_generation_enabled: true | false</li>
+        <li>allowed_tones: Professional, Friendly, Firm, Neutral</li>
+        <li>default_tone: Professional</li>
+        <li>style_guidelines_template_id (optional)</li>
+        <li>forbidden_phrases_enforced: true | false</li>
+        <li>legal_safe_language_enforced: true | false</li>
+        <li>no_commitment_language_enforced: true | false</li>
+        <li>confidentiality_footer_enabled: true | false</li>
+        <li>personalization_level: Low | Medium | High</li>
+        <li>max_draft_length_chars</li>
+        <li>include_next_steps_section: true | false</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>safe_alternatives_mode replaces commitment language with review-forward phrasing</li>
+        <li>canned_response_library (approved snippets stored in Sheets)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Follow-up & Scheduling Settings</h2>
+      <ul>
+        <li>followup_detection_enabled: true | false</li>
+        <li>default_followup_days</li>
+        <li>followup_profiles: name, days_until_followup, applies_to_categories[]</li>
+        <li>send_later_suggestions_enabled: true | false</li>
+        <li>business_hours_only: true | false</li>
+        <li>business_hours: start_time_local (HH:MM), end_time_local (HH:MM)</li>
+        <li>weekend_sending_blocked: true | false</li>
+        <li>holidays_calendar_source: None | Sheet | ExternalCalendar</li>
+        <li>reminders_enabled: true | false</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>No-response escalation ladder (label + notify + assign owner after N days)</li>
+        <li>Per-sender follow-up cadence overrides</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Attachment Handling Settings</h2>
+      <ul>
+        <li>attachment_detection_enabled: true | false</li>
+        <li>auto_download_enabled: false</li>
+        <li>auto_save_to_drive_enabled: false</li>
+        <li>default_drive_folder</li>
+        <li>drive_folder_by_category (mapping table)</li>
+        <li>attachment_size_limit_mb</li>
+        <li>attachment_linking_enabled: true | false</li>
+        <li>allowed_file_types[]</li>
+        <li>blocked_file_types[]</li>
+        <li>virus_scan_required: true | false</li>
+        <li>attachment_naming_policy: Original | Normalized | WithThreadId</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>High-risk attachment rule (executable-like files force quarantine + human review)</li>
+        <li>Checksum logging for audit integrity</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Labeling, Routing & Queue Settings</h2>
+      <ul>
+        <li>auto_labeling_enabled: true | false</li>
+        <li>label_namespace_prefix</li>
+        <li>default_labels: Needs-Review, Waiting-On-Reply, High-Risk, SLA-AtRisk</li>
+        <li>routing_rules_enabled: true | false</li>
+        <li>routing_rules table: match_condition, destination_label, owner_assignment</li>
+        <li>multi_label_allowed: true | false</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>Single source routing: one primary label + secondary tags</li>
+        <li>routing_conflicts_report logged to Sheets</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Task Extraction & Work Management</h2>
+      <ul>
+        <li>task_extraction_enabled: true | false</li>
+        <li>task_types_allowed: Reply, Review, Approval, Delivery, Investigation, Download, Upload, Schedule</li>
+        <li>default_task_owner</li>
+        <li>task_owner_by_category (mapping table)</li>
+        <li>task_writeback_sheet_url</li>
+        <li>task_status_enum: Open, InProgress, Blocked, Done</li>
+        <li>task_due_date_policy: RequiredForP0P1 | Optional | None</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>Owner required gate (owner null → Needs-Review, block Auto)</li>
+        <li>Deduplication for same Email_ID + task_type</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Risk, Compliance & Safety Settings</h2>
+      <ul>
+        <li>high_risk_topics: Legal, Finance, HR, Compliance</li>
+        <li>sensitive_keywords[] (table-driven)</li>
+        <li>negative_sentiment_increases_risk: true | false</li>
+        <li>multi_recipient_increases_risk: true | false</li>
+        <li>external_sender_increases_risk: true | false</li>
+        <li>forced_human_review_on_high_risk: true | false</li>
+        <li>forced_human_review_on_attachments: true | false</li>
+        <li>pii_redaction_in_drafts: true | false (UI preview only)</li>
+        <li>escalation_label</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>risk_reason_codes[] standardized for audits (KEYWORD_CONTRACT, MULTI_RECIPIENT, EXTERNAL_DOMAIN)</li>
+        <li>safe_send_checks block SEND if missing To/Subject/body placeholders</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Audit, Governance & Change Control</h2>
+      <ul>
+        <li>audit_enabled: true | false</li>
+        <li>immutable_audit_logs: true | false</li>
+        <li>audit_retention_days</li>
+        <li>audit_fields_required: assumptions_made, ambiguities_detected, sensitive_topics_detected, policy_flags</li>
+        <li>config_version</li>
+        <li>last_updated_at (ISO 8601)</li>
+        <li>updated_by</li>
+        <li>change_notes</li>
+        <li>rollback_enabled: true | false</li>
+        <li>approval_required_for_config_changes: true | false</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>Config diff capture on every update written to audit sheet</li>
+        <li>Break-glass admin mode with mandatory reason + expiration timestamp</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Human Review Gates</h2>
+      <ul>
+        <li>review_required_if_confidence_below</li>
+        <li>review_required_if_risk_medium_or_high: true | false</li>
+        <li>review_required_if_missing_data: true | false</li>
+        <li>review_required_if_ambiguous_intent: true | false</li>
+        <li>review_required_if_new_sender: true | false</li>
+        <li>review_required_if_cc_present: true | false</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>Review checklist template per category</li>
+        <li>Approval capture fields (approver, approved_at, notes) in Sheets</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Failure Handling & Safety Defaults</h2>
+      <ul>
+        <li>silence_is_failure: true | false</li>
+        <li>default_action_on_error: CREATE_DRAFT</li>
+        <li>halt_on_schema_violation: true | false</li>
+        <li>fallback_category_on_error: Internal</li>
+        <li>fallback_label_on_error: Needs-Review</li>
+        <li>notification_on_failure: None | LabelOnly | EmailOwner | SheetFlag</li>
+        <li>max_consecutive_failures_before_halt</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>Automatic quarantine mode after repeated failures (execution_enabled=false)</li>
+        <li>Structured failure codes for fast triage</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>UI / App Experience Settings</h2>
+      <ul>
+        <li>show_confidence_score: true | false</li>
+        <li>show_risk_level: true | false</li>
+        <li>show_decision_mode: true | false</li>
+        <li>show_reason_codes: true | false</li>
+        <li>editable_drafts_enabled: true | false</li>
+        <li>manual_override_enabled: true | false</li>
+        <li>quick_actions_enabled: true | false</li>
+        <li>default_inbox_view: Triage | ByOwner | BySLA | ByLabel</li>
+      </ul>
+      <h3>Applied Improvements</h3>
+      <ul>
+        <li>One-click approve only enables for low-risk, high-confidence drafts</li>
+        <li>Audit preview panel to see what will be logged before execution</li>
+      </ul>
+    </section>
+  </main>
+
+  <p class="footer-note">This document reflects current configuration options. Changes are tracked in audit logs and optional Sheets-based change history.</p>
+</body>
+</html>
